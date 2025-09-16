@@ -1,16 +1,8 @@
 import h5py
 
 # mở file hdf5 (read-only)
-with h5py.File("data.h5", "r") as f:
-    # liệt kê các "keys" ở cấp cao nhất
-    print("Keys:", list(f.keys()))
+with h5py.File(r"D:\Download\activitynet\FeatureData\new_clip_vit_32_activitynet_vid_features.hdf5", "r") as f:
+    for i in list(f.keys())[11:20]:
+        print(f"This is id: {i}, Shape: {f[str(i)].shape}")
 
-    # giả sử có dataset tên "images"
-    data = f["images"]
-
-    # xem shape và dtype
-    print("Shape:", data.shape)
-    print("Dtype:", data.dtype)
-
-    # đọc vài phần tử đầu tiên (giống như đọc "dòng đầu")
-    print(data[:5])
+    
