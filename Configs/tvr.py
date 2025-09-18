@@ -11,7 +11,7 @@ cfg['dataset_name'] = 'tvr'
 cfg['seed'] = 9527
 
 cfg['root'] = '/UEM/'
-cfg['data_root'] = '/data/'
+cfg['data_root'] = '/Data/'
 
 cfg['collection'] = 'tvr'
 
