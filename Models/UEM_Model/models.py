@@ -159,6 +159,7 @@ class UEM_Net(nn.Module):
         """
 
         feat = input_proj_layer(feat)
+        feat = feat[:, :pos_embed_layer.position_embeddings.num_embeddings, :]
         feat = pos_embed_layer(feat)
         if mask is not None:
             mask = mask.unsqueeze(1)  # (N, 1, L), torch.FloatTensor

@@ -64,6 +64,9 @@ class TrainablePositionalEncoding(nn.Module):
         # tạo position_ids tương ứng với seq_length đã truncate
         position_ids = torch.arange(seq_length, dtype=torch.long, device=input_feat.device)
         position_ids = position_ids.unsqueeze(0).repeat(bsz, 1)  # (N, L)
+        print("seq_length:", seq_length)
+        print("position_ids max:", position_ids.max(), "min:", position_ids.min())
+        print("num_embeddings:", self.position_embeddings.num_embeddings)
         position_embeddings = self.position_embeddings(position_ids)
 
         embeddings = self.LayerNorm(input_feat + position_embeddings)
