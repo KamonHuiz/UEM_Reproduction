@@ -75,12 +75,16 @@ def l2_normalize_np_array(np_array, eps=1e-5):
 def collate_train(data):
     """
     Build mini-batch tensors from a list of (video, caption) tuples.
+    This version keeps word-level masks safe for attention.
     """
     if data[0][1] is not None:
         data.sort(key=lambda x: len(x[1]), reverse=True)
 
     video_event_mask, video_frame_features, captions, word_tokens, idxs, cap_ids, video_ids = zip(*data)
 
+    # -------------------------
+    # Video event masks + frames
+    # -------------------------
     video_event_masks = torch.cat(video_event_mask, dim=0).float()
 
     video_lengths = [len(frame) for frame in video_frame_features]
@@ -92,6 +96,9 @@ def collate_train(data):
         frame_videos[i, :end, :] = frames[:end, :]
         videos_mask[i, :end] = 1.0
 
+    # -------------------------
+    # Clip-level text features
+    # -------------------------
     feat_dim = captions[0][0].shape[-1]
     merge_captions = []
     clip_labels = []
@@ -101,34 +108,39 @@ def collate_train(data):
         merge_captions.extend(cap for cap in caps)
 
     clip_target = torch.zeros(len(merge_captions), feat_dim)
-
     for index, cap in enumerate(merge_captions):
         clip_target[index, :] = cap
 
+    # -------------------------
+    # Word-level features
+    # -------------------------
     word_merge_captions = []
-    word_all_lengths = []
+    word_mask_list = []
 
-    for index, tokens in enumerate(word_tokens):
-        word_all_lengths.extend(len(token) for token in tokens)
-        word_merge_captions.extend(token for token in tokens)
+    for tokens in word_tokens:
+        for token in tokens:
+            word_merge_captions.append(token)
+            word_mask_list.append(torch.ones(token.shape[0]))  # mask = 1 for each real token
 
-    words_target = torch.zeros(len(word_all_lengths), max(word_all_lengths), feat_dim)
-    words_mask = torch.zeros(len(word_all_lengths), max(word_all_lengths))
+    max_word_len = max([t.shape[0] for t in word_merge_captions])
+    words_target = torch.zeros(len(word_merge_captions), max_word_len, feat_dim)
+    words_mask = torch.zeros(len(word_merge_captions), max_word_len)
 
-    for index, tokens in enumerate(word_merge_captions):
-        end = word_all_lengths[index]
-        words_target[index, :end, :] = tokens[:end, :]
-        words_mask[index, :end] = 1.0
+    for i, token in enumerate(word_merge_captions):
+        L = token.shape[0]
+        words_target[i, :L, :] = token
+        words_mask[i, :L] = word_mask_list[i]
 
+    return dict(
+        video_event=video_event_masks,
+        video_frame_features=frame_videos,
+        videos_mask=videos_mask,
+        text_feat=clip_target,
+        text_labels=clip_labels,
+        word_feat=words_target,
+        word_mask=words_mask
+    )
 
-    return dict(video_event=video_event_masks,
-                video_frame_features=frame_videos,
-                videos_mask=videos_mask,
-                text_feat=clip_target,
-                text_labels=clip_labels,
-                word_feat=words_target,
-                word_mask=words_mask
-                )
 
 
 def collate_frame_val(data):
