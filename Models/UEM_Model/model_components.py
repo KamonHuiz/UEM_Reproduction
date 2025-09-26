@@ -84,6 +84,7 @@ class TrainablePositionalEncoding(nn.Module):
         return input_feat + position_embeddings
 
 
+
 class LinearLayer(nn.Module):
     """linear layer configurable with layer normalization, dropout, ReLU."""
     def __init__(self, in_hsz, out_hsz, layer_norm=True, dropout=0.1, relu=True):

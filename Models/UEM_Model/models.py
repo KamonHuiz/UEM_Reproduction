@@ -110,21 +110,32 @@ class UEM_Net(nn.Module):
         return [label_dict, total_normalized_query_video_similarity, total_query_video_similarity]
 
     def encode_query_word(self, query_feat, query_mask):
-        encoded_query = self.encode_input(query_feat, query_mask, self.query_word_input_proj, self.query_word_encoder,
-                                          self.query_word_pos_embed)  # (N, Lq, D)
-        if query_mask is not None:
-            mask = query_mask.unsqueeze(1)
+        # encode_input đã truncate feat và mask
+        encoded_query = self.encode_input(
+            query_feat,
+            query_mask,
+            self.query_word_input_proj,
+            self.query_word_encoder,
+            self.query_word_pos_embed
+        )  # (N, Lq, D)
 
+        # truncate query_mask để khớp với encoded_query
+        if query_mask is not None:
+            max_len = encoded_query.shape[1]
+            query_mask = query_mask[:, :max_len]
+
+        # modular queries
         video_query_feat = self.get_modularized_queries(encoded_query, query_mask)  # (N, D) * 1
 
         return video_query_feat
 
 
-    def encode_context(self, video_frame_feature, video_mask=None):
 
+    def encode_context(self, video_frame_feature, video_mask=None):
+        # truncate nếu dài hơn 128
         if video_frame_feature.shape[1] > 128:
             video_frame_feature = video_frame_feature[:, :128, :]
-            video_frame_mask = video_frame_mask[:, :128]
+            video_mask = video_mask[:, :128]  # dùng video_mask, không phải video_frame_mask
 
         # pad nếu ngắn hơn 128
         elif video_frame_feature.shape[1] < 128:
@@ -132,18 +143,19 @@ class UEM_Net(nn.Module):
             temp_feat = 0.0 * video_frame_feature.mean(dim=1, keepdim=True).repeat(1, fix, 1)
             video_frame_feature = torch.cat([video_frame_feature, temp_feat], dim=1)
 
-            temp_mask = 0.0 * video_frame_mask.mean(dim=1, keepdim=True).repeat(1, fix).type_as(video_frame_mask)
-            video_frame_mask = torch.cat([video_frame_mask, temp_mask], dim=1)
-
             temp_mask = 0.0 * video_mask.mean(dim=1, keepdim=True).repeat(1, fix).type_as(video_mask)
             video_mask = torch.cat([video_mask, temp_mask], dim=1)
 
-        video_frame_feat = self.encode_input(video_frames, video_mask, self.frame_input_proj,
-                                               self.frame_encoder,
-                                               self.frame_pos_embed, self.weight_token)
+        # encode input dùng tên đúng
+        video_frame_feat = self.encode_input(video_frame_feature, video_mask,
+                                            self.frame_input_proj,
+                                            self.frame_encoder,
+                                            self.frame_pos_embed,
+                                            self.weight_token)
 
-        video_frame_feat = torch.where(video_mask.unsqueeze(-1).repeat(1, 1, video_frame_feat.shape[-1]) == 1.0, \
-                                         video_frame_feat, 0. * video_frame_feat)
+        # mask output
+        video_frame_feat = torch.where(video_mask.unsqueeze(-1).repeat(1, 1, video_frame_feat.shape[-1]) == 1.0,
+                                    video_frame_feat, 0.0 * video_frame_feat)
 
         return video_frame_feat
 
@@ -158,11 +170,23 @@ class UEM_Net(nn.Module):
             pos_embed_layer: positional embedding layer
         """
 
+        # Project input
         feat = input_proj_layer(feat)
-        feat = feat[:, :pos_embed_layer.position_embeddings.num_embeddings, :]
-        feat = pos_embed_layer(feat)
+
+        # truncate sequence theo max positional embeddings
+        max_len = pos_embed_layer.position_embeddings.num_embeddings
+        seq_length = min(feat.shape[1], max_len)
+        feat = feat[:, :seq_length, :]
+
+        # truncate mask nếu có
         if mask is not None:
-            mask = mask.unsqueeze(1)  # (N, 1, L), torch.FloatTensor
+            mask = mask[:, :seq_length]
+            mask = mask.unsqueeze(1)  # (N, 1, L)
+
+        # positional embedding
+        feat = pos_embed_layer(feat)
+
+        # pass vào encoder
         if weight_token is not None:
             return encoder_layer(feat, mask, weight_token)  # (N, L, D_hidden)
         else:
@@ -173,12 +197,28 @@ class UEM_Net(nn.Module):
         Args:
             encoded_query: (N, L, D)
             query_mask: (N, L)
-            return_modular_att: bool
+        Returns:
+            modular_queries: (N, D) hoặc (N, M, D) nếu modular_vector_mapping out_features=M>1
         """
-        modular_attention_scores = self.modular_vector_mapping(encoded_query)  # (N, L, 2 or 1)
-        modular_attention_scores = F.softmax(mask_logits(modular_attention_scores, query_mask.unsqueeze(2)), dim=1)
-        modular_queries = torch.einsum("blm,bld->bmd", modular_attention_scores, encoded_query)  # (N, 2 or 1, D)
-        return modular_queries.squeeze()
+        modular_attention_scores = self.modular_vector_mapping(encoded_query)  # (N, L, M)
+        # ensure mask shape match
+        if query_mask is not None:
+            mask = query_mask.unsqueeze(-1)  # (N, L, 1)
+        else:
+            mask = torch.ones(encoded_query.shape[:2] + (1,), device=encoded_query.device)
+
+        # apply mask logits and softmax over sequence dimension
+        modular_attention_scores = F.softmax(mask_logits(modular_attention_scores, mask), dim=1)  # (N, L, M)
+        
+        # weighted sum
+        modular_queries = torch.einsum("blm,bld->bmd", modular_attention_scores, encoded_query)  # (N, M, D)
+        
+        # nếu M=1, squeeze modular dimension an toàn
+        if modular_queries.shape[1] == 1:
+            modular_queries = modular_queries.squeeze(1)  # (N, D)
+        
+        return modular_queries
+
 
 
     def event_refinement(self, video_frame_feat, query_feat, event_mask):
