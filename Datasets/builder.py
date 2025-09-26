@@ -1,6 +1,6 @@
 import os
 import ipdb
-import Subset
+from torch.utils.data import Subset
 from torch.utils.data import DataLoader
 
 from Utils.basic_utils import BigFile, read_dict
