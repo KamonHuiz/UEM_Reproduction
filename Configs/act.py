@@ -53,7 +53,7 @@ cfg['eval_context_bsz'] = 1#100--------------------------
 
 # model
 # max word number
-cfg['max_desc_l'] = 30
+cfg['max_desc_l'] = 50
 # max frame number
 cfg['max_ctx_l'] = 128
 cfg['sub_feat_size'] = 768
