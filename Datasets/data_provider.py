@@ -119,6 +119,7 @@ def collate_train(data):
 
     for tokens in word_tokens:
         for token in tokens:
+            token = token.squeeze(0)  # <--- bỏ dim batch 1
             word_merge_captions.append(token)
             word_mask_list.append(torch.ones(token.shape[0]))  # mask = 1 for each real token
 
@@ -140,6 +141,7 @@ def collate_train(data):
         word_feat=words_target,
         word_mask=words_mask
     )
+
 
 
 
