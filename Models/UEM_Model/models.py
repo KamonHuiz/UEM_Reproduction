@@ -275,6 +275,6 @@ class UEM_Net(nn.Module):
         refine_query_video_similarity = torch.matmul(refine_event_representation, single_query_feat)
 
         return normalized_refine_query_video_similarity, refine_query_video_similarity
-def mask_logits(target, mask):
-    mask = mask.float().to(target.device)  # chuyển mask sang float và cùng device với target
-    return target * mask + (1 - mask) * (-1e10)
+    def mask_logits(target, mask):
+        mask = mask.float().to(target.device)  # chuyển mask sang float và cùng device với target
+        return target * mask + (1 - mask) * (-1e10)
