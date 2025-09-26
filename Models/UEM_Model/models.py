@@ -84,6 +84,9 @@ class UEM_Net(nn.Module):
         query_labels = batch['text_labels']
         query_word_tokens = batch['word_feat']
         query_word_mask = batch['word_mask']
+        print("query_word_tokens min/max:", query_word_tokens.min(), query_word_tokens.max())
+        print("query_word_mask min/max:", query_word_mask.min(), query_word_mask.max())
+
 
         video_frame_feature = batch['video_frame_features']
         video_frame_mask = batch['videos_mask']
