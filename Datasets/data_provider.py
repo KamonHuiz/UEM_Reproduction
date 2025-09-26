@@ -209,7 +209,7 @@ class Dataset4PRVR(data.Dataset):
         self.clip_word_tokens = h5py.File(self.clip_word_tokens_path, 'r')
         self.clip_vid_feat = h5py.File(self.clip_vid_feat_path, 'r')
 
-        self.map_size = cfg['map_size']
+        #self.map_size = cfg['map_size']
         self.max_ctx_len = cfg['max_ctx_l']
         self.max_desc_len = cfg['max_desc_l']
 
@@ -268,7 +268,7 @@ class VisDataSet4PRVR(data.Dataset):
         else:
             self.video_ids = video2frames.keys()
         self.length = len(self.video_ids)
-        self.map_size = cfg['map_size']
+        #self.map_size = cfg['map_size']
         self.max_ctx_len = cfg['max_ctx_l']
         self.threshold = cfg['threshold']
         self.clip_vid_feat_path = clip_vid_feat_path
