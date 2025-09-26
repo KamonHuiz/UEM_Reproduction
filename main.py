@@ -4,32 +4,40 @@ import numpy as np
 import random
 import sys
 import time
-# from tqdm import tqdm
-# import ipdb
-# import pickle
+from tqdm import tqdm
+import ipdb
+import pickle
 
 import torch
 import torch.nn as nn
-from Utils.utils import set_log,set_seed
+
 from Configs.builder import get_configs
-#<SETTINGS>
+from Models.builder import get_models
+from Datasets.builder import get_datasets
+from Opts.builder import get_opts
+from Losses.builder import get_losses
+from Validations.builder import get_validations
+
+from Utils.basic_utils import AverageMeter, BigFile, read_dict, log_config
+from Utils.utils import set_seed, set_log, gpu, save_ckpt, load_ckpt
+
+
 root_path = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, root_path)
-#<INITIAL_ARGUEMENTS>
+
 parser = argparse.ArgumentParser(description="Uneven Event Modeling")
-    #DATASET
+
 parser.add_argument(
-    '-d', '--dataset_name', default='act', type=str, metavar='DATASET', help='dataset name',choices=['tvr', 'act']
+    '-d', '--dataset_name', default='act', type=str, metavar='DATASET', help='dataset name',
+    choices=['tvr', 'act']
 )
-    #GPU
 parser.add_argument(
     '--gpu', default = '1', type = str, help = 'specify gpu device'
-)
-    #EVALUATION
+    )
 parser.add_argument('--eval', action='store_true')
-    #LOAD CHECKPOINT
 parser.add_argument('--resume', default='', type=str)
 args = parser.parse_args()
+
 
 def train_one_epoch(epoch, train_loader, model, criterion, cfg, optimizer):
 
@@ -64,6 +72,7 @@ def train_one_epoch(epoch, train_loader, model, criterion, cfg, optimizer):
 
     return loss_meter.avg
 
+
 def val_one_epoch(epoch, context_dataloader, query_eval_loader, model, val_criterion, cfg, optimizer, best_val, loss_meter, logger):
 
     val_meter = val_criterion(model, context_dataloader, query_eval_loader)
@@ -90,6 +99,7 @@ def val_one_epoch(epoch, context_dataloader, query_eval_loader, model, val_crite
         
     return val_meter, best_val, es
 
+
 def validation(context_dataloader, query_eval_loader, model, val_criterion, cfg, logger, resume):
 
     val_meter = val_criterion(model, context_dataloader, query_eval_loader)
@@ -104,30 +114,80 @@ def validation(context_dataloader, query_eval_loader, model, val_criterion, cfg,
     logger.info('==========================================================================================================')
 
 
-
 def main():
     cfg = get_configs(args.dataset_name)
-    
-    # Set logging
+
+    # set logging
     logger = set_log(cfg['model_root'], 'log.txt')
-    logger.info(f'Uneven Event Modeling: {cfg['dataset_name']}')
+    logger.info('Uneven Event Modeling: {}'.format(cfg['dataset_name']))
 
-
-    # Set seed
+    # set seed
     set_seed(cfg['seed'])
-    logger.info(f'set seed: {cfg['seed']}')
-    
-    #Use device_ids to load Parralel GPU if need it
+    logger.info('set seed: {}'.format(cfg['seed']))
+
+    # hyper parameter
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     device_ids = range(torch.cuda.device_count())
-    logger.info(f'used gpu: {args.gpu}') 
-    
-    # Log Hyperparameters
+    logger.info('used gpu: {}'.format(args.gpu))
+
     logger.info('Hyper Parameter ......')
     logger.info(cfg)
 
+    # dataset
+    logger.info('Loading Data ......')
+    cfg, train_loader, context_dataloader, query_eval_loader, test_context_dataloader, test_query_eval_loader = get_datasets(cfg)
 
+    # model
+    logger.info('Loading Model ......') 
+    model = get_models(cfg)
 
-
+    # initial
+    current_epoch = -1
+    es_cnt = 0
+    best_val = [0., 0., 0., 0., 0.]
+    if args.resume != '':
+        logger.info('Resume from {}'.format(args.resume))
+        _, model_state_dict, optimizer_state_dict, current_epoch, best_val = load_ckpt(args.resume)
+        model.load_state_dict(model_state_dict)
+    model = model.cuda()
+    if len(device_ids) > 1:
+        model = nn.DataParallel(model)
     
-if __name__ == "__main__":
+    criterion = get_losses(cfg)
+    val_criterion = get_validations(cfg)
+
+    if args.eval:
+        if args.resume == '':
+            logger.info('No trained ckpt load !!!') 
+        else:
+            with torch.no_grad():
+                validation(test_context_dataloader, test_query_eval_loader, model, val_criterion, cfg, logger, args.resume)
+        exit(0)
+
+    optimizer = get_opts(cfg, model, train_loader)
+    if args.resume != '':
+        optimizer.load_state_dict(optimizer_state_dict)
+
+    for epoch in range(current_epoch + 1, cfg['n_epoch']):
+
+        ############## train
+        loss_meter = train_one_epoch(epoch, train_loader, model, criterion, cfg, optimizer)
+
+        ############## val
+        with torch.no_grad():
+            val_meter, best_val, es = val_one_epoch(epoch, context_dataloader, query_eval_loader, model, 
+                    val_criterion, cfg, optimizer, best_val, loss_meter, logger)
+
+        ############## early stop
+        if not es:
+            es_cnt = 0
+        else:
+            es_cnt += 1
+            if cfg['max_es_cnt'] != -1 and es_cnt > cfg['max_es_cnt']:  # early stop
+                logger.info('Early Stop !!!') 
+                exit(0)
+
+
+
+if __name__ == '__main__':
     main()
