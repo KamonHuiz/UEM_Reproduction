@@ -84,8 +84,8 @@ class UEM_Net(nn.Module):
         query_labels = batch['text_labels']
         query_word_tokens = batch['word_feat']
         query_word_mask = batch['word_mask']
-        print("query_word_tokens min/max:", query_word_tokens.min(), query_word_tokens.max())
-        print("query_word_mask min/max:", query_word_mask.min(), query_word_mask.max())
+        # print("query_word_tokens min/max:", query_word_tokens.min(), query_word_tokens.max())
+        # print("query_word_mask min/max:", query_word_mask.min(), query_word_mask.max())
 
 
         video_frame_feature = batch['video_frame_features']
@@ -222,26 +222,26 @@ class UEM_Net(nn.Module):
 
 
     def event_refinement(self, video_frame_feat, query_feat, event_mask):
-        print("video_frame_feat shape:", video_frame_feat.shape)
-        print("query_feat shape:", query_feat.shape)
-        print("event_mask shape:", event_mask.shape)
+        # print("video_frame_feat shape:", video_frame_feat.shape)
+        # print("query_feat shape:", query_feat.shape)
+        # print("event_mask shape:", event_mask.shape)
         softmax_clip_mask = event_mask.clone()
         softmax_clip_mask[softmax_clip_mask == 0.0] = -1e9
         softmax_clip_mask = F.softmax(softmax_clip_mask, dim=-1)
         video_events = torch.einsum('BFM,BMH->BFH', softmax_clip_mask, video_frame_feat)
-        print("video_events shape:", video_events.shape)
+        # print("video_events shape:", video_events.shape)
 
         normalized_video_events = F.normalize(video_events, dim=-1)
         normalized_query_feat = F.normalize(query_feat, dim=-1)
         normalized_frame_feat = F.normalize(video_frame_feat, dim=-1)
 
         normalize_query_event_similarity = torch.matmul(normalized_video_events, normalized_query_feat.t()).permute(2, 1, 0)
-        print("normalize_query_event_similarity shape:", normalize_query_event_similarity.shape)
+        # print("normalize_query_event_similarity shape:", normalize_query_event_similarity.shape)
 
         normalize_query_event_similarity[normalize_query_event_similarity == 0.0] = -1e9
 
         _, event_index = torch.max(normalize_query_event_similarity, dim=1)
-        print("event_index max:", event_index.max(), "min:", event_index.min())
+        # print("event_index max:", event_index.max(), "min:", event_index.min())
 
         total_normalized_query_video_similarity = []
         total_query_video_similarity = []
@@ -257,12 +257,12 @@ class UEM_Net(nn.Module):
 
 
     def query_event_cross_attention(self, single_event_index, event_mask, video_frame_feat, single_query_feat, normalized_frame_feat, normalized_single_query_feat):
-        print("single_event_index:", single_event_index)
-        print("event_mask shape:", event_mask.shape)
-        print("video_frame_feat shape:", video_frame_feat.shape)
-        print("single_query_feat shape:", single_query_feat.shape)
-        print("normalized_frame_feat shape:", normalized_frame_feat.shape)
-        print("normalized_single_query_feat shape:", normalized_single_query_feat.shape)
+        # print("single_event_index:", single_event_index)
+        # print("event_mask shape:", event_mask.shape)
+        # print("video_frame_feat shape:", video_frame_feat.shape)
+        # print("single_query_feat shape:", single_query_feat.shape)
+        # print("normalized_frame_feat shape:", normalized_frame_feat.shape)
+        # print("normalized_single_query_feat shape:", normalized_single_query_feat.shape)
         selected_frame_mask = event_mask[torch.arange(event_mask.size(0)), single_event_index]
         query_video_similarity = torch.matmul(normalized_frame_feat, normalized_single_query_feat)
         selected_frame_similarity = query_video_similarity * selected_frame_mask
