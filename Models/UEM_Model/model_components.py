@@ -53,11 +53,17 @@ class TrainablePositionalEncoding(nn.Module):
 
     def forward(self, input_feat):
         bsz, seq_length = input_feat.shape[:2]
+        max_pos = self.position_embeddings.num_embeddings
+        if seq_length > max_pos:
+            # truncate sequence nếu dài quá max
+            input_feat = input_feat[:, :max_pos, :]
+            seq_length = max_pos
         position_ids = torch.arange(seq_length, dtype=torch.long, device=input_feat.device)
         position_ids = position_ids.unsqueeze(0).repeat(bsz, 1)  # (N, L)
         position_embeddings = self.position_embeddings(position_ids)
         embeddings = self.LayerNorm(input_feat + position_embeddings)
         embeddings = self.dropout(embeddings)
+        print("seq_length:", seq_length, "max_pos:", max_pos)
         return embeddings
 
     def add_position_emb(self, input_feat):

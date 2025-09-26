@@ -122,10 +122,18 @@ class UEM_Net(nn.Module):
 
     def encode_context(self, video_frame_feature, video_mask=None):
 
-        if video_frame_feature.shape[1] != 128:
+        if video_frame_feature.shape[1] > 128:
+            video_frame_feature = video_frame_feature[:, :128, :]
+            video_frame_mask = video_frame_mask[:, :128]
+
+        # pad nếu ngắn hơn 128
+        elif video_frame_feature.shape[1] < 128:
             fix = 128 - video_frame_feature.shape[1]
-            temp_feat = 0.0 *video_frame_feature.mean(dim=1, keepdim=True).repeat(1, fix, 1)
-            video_frames = torch.cat([video_frame_feature, temp_feat], dim=1)
+            temp_feat = 0.0 * video_frame_feature.mean(dim=1, keepdim=True).repeat(1, fix, 1)
+            video_frame_feature = torch.cat([video_frame_feature, temp_feat], dim=1)
+
+            temp_mask = 0.0 * video_frame_mask.mean(dim=1, keepdim=True).repeat(1, fix).type_as(video_frame_mask)
+            video_frame_mask = torch.cat([video_frame_mask, temp_mask], dim=1)
 
             temp_mask = 0.0 * video_mask.mean(dim=1, keepdim=True).repeat(1, fix).type_as(video_mask)
             video_mask = torch.cat([video_mask, temp_mask], dim=1)
