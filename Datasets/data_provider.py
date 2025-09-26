@@ -249,7 +249,8 @@ class Dataset4PRVR(data.Dataset):
             clip_cap_feat = torch.from_numpy(clip_cap_feat)
             clip_cap_tensors.append(clip_cap_feat)
 
-            clip_word_feat = self.clip_word_tokens[cap_id][...]
+            word_cap_id = cap_id.replace('#enc','')
+            clip_word_feat = self.clip_word_tokens[word_cap_id][...]
             clip_word_tensor = torch.from_numpy(l2_normalize_np_array(clip_word_feat))[:self.max_desc_len]
             clip_word_tokens.append(clip_word_tensor)
 
@@ -325,8 +326,11 @@ class TxtDataSet4PRVR(data.Dataset):
         clip_cap_feat = self.clip_text_feat[cap_id][...]
         clip_cap_feat = torch.from_numpy(clip_cap_feat)
 
-        clip_word_tensors = self.clip_word_tokens[cap_id][...]
+        # map cap_id sang key đúng của clip_word_tokens (bỏ #enc)
+        word_cap_id = cap_id.replace('#enc','')
+        clip_word_tensors = self.clip_word_tokens[word_cap_id][...]
         clip_word_tokens = torch.from_numpy(l2_normalize_np_array(clip_word_tensors))[:self.max_desc_len]
+
 
         return clip_cap_feat, clip_word_tokens, index, cap_id
 

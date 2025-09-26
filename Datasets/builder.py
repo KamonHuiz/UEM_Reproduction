@@ -41,10 +41,7 @@ def get_datasets(cfg):
     val_video_ids_list = read_video_ids(caption_files['val'])
 
     val_video_dataset = VisDataSet4PRVR(clip_vid_feat_path, video2frames, cfg, video_ids=val_video_ids_list)
-    if cfg.get('debug_mode', False):
-        train_dataset = Subset(train_dataset, range(min(5, len(train_dataset))))
-        val_text_dataset = Subset(val_text_dataset, range(min(2, len(val_text_dataset))))
-        val_video_dataset = Subset(val_video_dataset, range(min(2, len(val_video_dataset))))
+
 
     testCollection = '%stest' % collection
     test_cap_file = {'test': '%s.caption.txt' % testCollection}
