@@ -39,7 +39,7 @@ parser.add_argument('--resume', default='', type=str)
 args = parser.parse_args()
 
 
-def train_one_epoch(epoch, train_loader, model, criterion, cfg, optimizer):
+def train_one_epoch(epoch, train_loader, model, criterion, cfg, optimizer,device):
 
     if epoch >= cfg['hard_negative_start_epoch']:
         criterion.cfg['use_hard_negative'] = True
@@ -55,7 +55,7 @@ def train_one_epoch(epoch, train_loader, model, criterion, cfg, optimizer):
 
     for idx, batch in enumerate(train_bar):
 
-        batch = gpu(batch)
+        batch = gpu(batch,device=device)
 
         optimizer.zero_grad()
 
@@ -179,7 +179,7 @@ def main():
     for epoch in range(current_epoch + 1, cfg['n_epoch']):
 
         ############## train
-        loss_meter = train_one_epoch(epoch, train_loader, model, criterion, cfg, optimizer)
+        loss_meter = train_one_epoch(epoch, train_loader, model, criterion, cfg, optimizer,device=device)
 
         ############## val
         with torch.no_grad():

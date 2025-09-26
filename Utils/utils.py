@@ -127,15 +127,17 @@ def init_weights(m):
                 nn.init.zeros_(param)
 
 
-def gpu(data):
-    """
-    Transfer tensor in `data` to gpu recursively
-    `data` can be dict, list or tuple
-    """
-    if isinstance(data, list) or isinstance(data, tuple):
-        data = [gpu(x) for x in data]
-    elif isinstance(data, dict):
-        data = {key:gpu(_data) for key,_data in data.items()}
+def gpu(data, device=None):
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    if isinstance(data, dict):
+        return {k: gpu(v, device) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [gpu(x, device) for x in data]
+    elif isinstance(data, tuple):
+        return tuple(gpu(x, device) for x in data)
     elif isinstance(data, torch.Tensor):
-        data = data.contiguous().cuda(non_blocking=True)
-    return data
+        return data.to(device, non_blocking=True)
+    else:
+        return data
