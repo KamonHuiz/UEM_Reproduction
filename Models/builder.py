@@ -10,7 +10,7 @@ def get_models(cfg):
         hidden_size=cfg['hidden_size'],  # hidden dimension
         max_ctx_l=cfg['max_ctx_l'],
         max_desc_l=cfg['max_desc_l'],
-        map_size=cfg['map_size'],
+        #map_size=cfg['map_size'],
         input_drop=cfg['input_drop'],
         drop=cfg['drop'],
         n_heads=cfg['n_heads'],  # self-att heads
