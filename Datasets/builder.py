@@ -53,7 +53,7 @@ def get_datasets(cfg):
     test_caption_files = {x: os.path.join(rootpath, collection, 'TextData', test_cap_file[x])
                      for x in test_cap_file}
 
-    test_video2frames =  read_dict(os.path.join(rootpath, collection, 'FeatureData', cfg['visual_feature'], 'video2frames.txt'))
+    test_video2frames =  read_dict(os.path.join(rootpath, collection, 'FeatureData', 'video2frames.txt'))
     test_video_ids_list = read_video_ids(test_caption_files['test'])
     test_vid_dataset = VisDataSet4PRVR(clip_vid_feat_path, test_video2frames, cfg, video_ids=test_video_ids_list)
     test_text_dataset = TxtDataSet4PRVR(test_caption_files['test'], clip_text_feat_path, clip_word_tokens_path, cfg)
