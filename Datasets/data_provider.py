@@ -191,15 +191,13 @@ def collate_text_val(data):
         
         words_mask = torch.zeros(len(word_tokens), max_len)
         for i, token in enumerate(word_tokens):
+            print(f"Before squeeze sample {i}: {token.shape}")
+            token = token.squeeze(0) if token.dim() == 3 and token.shape[0] == 1 else token
+            print(f"After squeeze sample {i}: {token.shape}")
             end = lengths[i]
-            print(f"Processing sample {i}: token shape {token.shape}, end {end}")
-            # Ensure token is 2D
-            if token.dim() == 1:
-                token = token.unsqueeze(-1)
-                print(f"Token reshaped to 2D: {token.shape}")
-            words_target[i, :end] = token[:end]
+            words_target[i, :end, :] = token[:end, :]
             words_mask[i, :end] = 1.0
-        
+                
         print("Final words_target shape:", words_target.shape)
         print("Final words_mask shape:", words_mask.shape)
     else:
