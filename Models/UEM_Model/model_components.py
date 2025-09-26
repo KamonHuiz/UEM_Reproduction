@@ -75,6 +75,9 @@ class TrainablePositionalEncoding(nn.Module):
 
     def add_position_emb(self, input_feat):
         bsz, seq_length = input_feat.shape[:2]
+        max_len = self.position_embeddings.num_embeddings
+        seq_length = min(seq_length, max_len)  # truncate
+        input_feat = input_feat[:, :seq_length, :]
         position_ids = torch.arange(seq_length, dtype=torch.long, device=input_feat.device)
         position_ids = position_ids.unsqueeze(0).repeat(bsz, 1)  # (N, L)
         position_embeddings = self.position_embeddings(position_ids)
