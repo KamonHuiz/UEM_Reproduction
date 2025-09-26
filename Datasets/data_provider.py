@@ -180,7 +180,7 @@ def collate_text_val(data):
         words_mask = torch.zeros(len(word_tokens), max(lengths))
         for i, token in enumerate(word_tokens):
             end = lengths[i]
-            words_target[i, :end] = token[:end]
+            words_target[i, :end, :] = token[:end, :]
             words_mask[i, :end] = 1.0
     else:
         words_target = None
