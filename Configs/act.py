@@ -9,7 +9,7 @@ cfg['dataset_name'] = 'activitynet'
 cfg['seed'] = 9527
 
 cfg['root'] = '/UEM/'
-cfg['data_root'] = '/data/'
+cfg['data_root'] = '/content/drive/MyDrive/UEM'
 
 cfg['collection'] = 'activitynet'
 
