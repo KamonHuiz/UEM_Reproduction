@@ -163,50 +163,50 @@ def collate_frame_val(data):
     return video_event_masks, frame_videos, videos_mask, idxs, video_ids
 
 def collate_text_val(data):
-    print("=== Start collate_text_val ===")
-    print("Raw data length:", len(data))
+    #print("=== Start collate_text_val ===")
+    #print("Raw data length:", len(data))
     if data[0][0] is not None:
         data.sort(key=lambda x: len(x[0]), reverse=True)
-        print("Data sorted by caption length.")
+        #print("Data sorted by caption length.")
 
     captions, word_tokens, idxs, cap_ids = zip(*data)
-    print(f"Number of captions: {len(captions)}")
+    #print(f"Number of captions: {len(captions)}")
     
     feat_dim = captions[0].shape[-1]
-    print(f"Feature dimension of captions: {feat_dim}")
+    #print(f"Feature dimension of captions: {feat_dim}")
     
     clip_target = torch.zeros(len(captions), feat_dim)
     for index, caps in enumerate(captions):
         clip_target[index, :] = caps
-    print("Clip target shape:", clip_target.shape)
+    #print("Clip target shape:", clip_target.shape)
 
     if word_tokens[0] is not None:
         lengths = [len(token) for token in word_tokens]
-        print("Lengths of word tokens:", lengths)
+        #print("Lengths of word tokens:", lengths)
         max_len = max(lengths)
-        print("Maximum word token length:", max_len)
+        #print("Maximum word token length:", max_len)
         
         words_target = torch.zeros(len(word_tokens), max_len, word_tokens[0].shape[-1])
-        print("words_target shape:", words_target.shape)
+        #print("words_target shape:", words_target.shape)
         
         words_mask = torch.zeros(len(word_tokens), max_len)
         for i, token in enumerate(word_tokens):
-            print(f"Before squeeze sample {i}: {token.shape}")
+            #print(f"Before squeeze sample {i}: {token.shape}")
             token = token.squeeze(0) if token.dim() == 3 and token.shape[0] == 1 else token
-            print(f"After squeeze sample {i}: {token.shape}")
+            # print(f"After squeeze sample {i}: {token.shape}")
             end = lengths[i]
             words_target[i, :end, :] = token[:end, :]
             words_mask[i, :end] = 1.0
                 
-        print("Final words_target shape:", words_target.shape)
-        print("Final words_mask shape:", words_mask.shape)
+        # print("Final words_target shape:", words_target.shape)
+        # print("Final words_mask shape:", words_mask.shape)
     else:
         words_target = None
         lengths = None
         words_mask = None
         print("No word tokens available.")
 
-    print("=== End collate_text_val ===")
+    #print("=== End collate_text_val ===")
     return clip_target, words_target, words_mask, idxs, cap_ids
 
 

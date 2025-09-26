@@ -86,17 +86,10 @@ def get_datasets(cfg):
                                    num_workers=cfg['num_workers'],
                                    shuffle=False,
                                    pin_memory=cfg['pin_memory'])
-    print("Query eval loader batch size:", query_eval_loader.batch_size)
-    print("Context test loader batch size:", test_context_dataloader.batch_size)
+    # print("Query eval loader batch size:", query_eval_loader.batch_size)
+    # print("Context test loader batch size:", test_context_dataloader.batch_size)
 
-    print("Val text dataset size:", len(val_text_dataset))
-    print("Test video dataset size:", len(test_vid_dataset))
-    for batch in query_eval_loader:
-        print("First batch (text):", len(batch[0]))
-        break
-
-    for batch in test_context_dataloader:
-        print("First batch (video):", len(batch[0]))
-        break
+    # print("Val text dataset size:", len(val_text_dataset))
+    # print("Test video dataset size:", len(test_vid_dataset))
 
     return cfg, train_loader, context_dataloader, query_eval_loader, test_context_dataloader, test_query_eval_loader
