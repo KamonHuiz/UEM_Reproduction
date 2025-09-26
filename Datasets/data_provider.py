@@ -164,7 +164,7 @@ def collate_frame_val(data):
 
 def collate_text_val(data):
     print("=== Start collate_text_val ===")
-    
+    print("Raw data length:", len(data))
     if data[0][0] is not None:
         data.sort(key=lambda x: len(x[0]), reverse=True)
         print("Data sorted by caption length.")
