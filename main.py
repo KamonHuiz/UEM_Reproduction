@@ -128,6 +128,13 @@ def main():
     # hyper parameter
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
     device_ids = range(torch.cuda.device_count())
+    if args.gpu and torch.cuda.is_available():
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+        device = torch.device("cuda")
+    else:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+    device = torch.device("cpu")
+
     logger.info('used gpu: {}'.format(args.gpu))
 
     logger.info('Hyper Parameter ......')
@@ -149,7 +156,8 @@ def main():
         logger.info('Resume from {}'.format(args.resume))
         _, model_state_dict, optimizer_state_dict, current_epoch, best_val = load_ckpt(args.resume)
         model.load_state_dict(model_state_dict)
-    model = model.cuda()
+    model = model.to(device)
+
     if len(device_ids) > 1:
         model = nn.DataParallel(model)
     
