@@ -22,7 +22,7 @@ cfg['sft_factor'] = 0.6
 
 
 # dataset
-cfg['num_workers'] = 32
+cfg['num_workers'] = 2#32
 cfg['no_core_driver'] = False
 cfg['no_pin_memory'] = False
 cfg['batchsize'] = 64  #64 ---------------------
