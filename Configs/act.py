@@ -25,7 +25,7 @@ cfg['sft_factor'] = 0.6
 cfg['num_workers'] = 32
 cfg['no_core_driver'] = False
 cfg['no_pin_memory'] = False
-cfg['batchsize'] = 64
+cfg['batchsize'] = 1  #64 ---------------------
 
 
 # opt
@@ -34,10 +34,10 @@ cfg['lr_warmup_proportion'] = 0.01
 cfg['wd'] = 0.01
 cfg['margin'] = 0.2
 
-
+cfg['debug_mode'] = True
 # train
-cfg['n_epoch'] = 100
-cfg['max_es_cnt'] = 10
+cfg['n_epoch'] = 1#100
+cfg['max_es_cnt'] = -1  #10
 cfg['hard_negative_start_epoch'] = 20
 cfg['hard_pool_size'] = 20
 cfg['use_hard_negative'] = False
@@ -47,8 +47,8 @@ cfg['threshold'] = 0.9
 
 
 # eval
-cfg['eval_query_bsz'] = 30
-cfg['eval_context_bsz'] = 100
+cfg['eval_query_bsz'] = 1#30
+cfg['eval_context_bsz'] = 1#100--------------------------
 
 
 # model
