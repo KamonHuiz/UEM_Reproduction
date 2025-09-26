@@ -133,7 +133,7 @@ def main():
         device = torch.device("cuda")
     else:
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
-    device = torch.device("cpu")
+        device = torch.device("cpu")
 
     logger.info('used gpu: {}'.format(args.gpu))
 
