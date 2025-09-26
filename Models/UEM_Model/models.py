@@ -239,9 +239,9 @@ class UEM_Net(nn.Module):
         print("normalize_query_event_similarity shape:", normalize_query_event_similarity.shape)
 
         normalize_query_event_similarity[normalize_query_event_similarity == 0.0] = -1e9
-        print("event_index max:", event_index.max(), "min:", event_index.min())
 
         _, event_index = torch.max(normalize_query_event_similarity, dim=1)
+        print("event_index max:", event_index.max(), "min:", event_index.min())
 
         total_normalized_query_video_similarity = []
         total_query_video_similarity = []
@@ -275,6 +275,6 @@ class UEM_Net(nn.Module):
         refine_query_video_similarity = torch.matmul(refine_event_representation, single_query_feat)
 
         return normalized_refine_query_video_similarity, refine_query_video_similarity
-
 def mask_logits(target, mask):
+    mask = mask.float().to(target.device)  # chuyển mask sang float và cùng device với target
     return target * mask + (1 - mask) * (-1e10)
