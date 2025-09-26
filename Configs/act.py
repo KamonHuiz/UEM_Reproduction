@@ -47,8 +47,8 @@ cfg['threshold'] = 0.9
 
 
 # eval
-cfg['eval_query_bsz'] = 1#30
-cfg['eval_context_bsz'] = 1#100--------------------------
+cfg['eval_query_bsz'] = 30
+cfg['eval_context_bsz'] = 100#--------------------------
 
 
 # model
