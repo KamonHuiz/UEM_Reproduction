@@ -59,7 +59,8 @@ class TrainablePositionalEncoding(nn.Module):
         position_ids = position_ids.unsqueeze(0).repeat(bsz, 1)  # (N, L)
         position_embeddings = self.position_embeddings(position_ids)
         # truncate input_feat nếu dài hơn
-        input_feat = input_feat[:, :seq_length, :]
+        #input_feat = input_feat[:, :seq_length, :]
+        input_feat = input_feat[:, :self.position_embeddings.num_embeddings, :]
         embeddings = self.LayerNorm(input_feat + position_embeddings)
         embeddings = self.dropout(embeddings)
         return embeddings
