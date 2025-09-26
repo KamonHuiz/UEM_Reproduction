@@ -197,7 +197,7 @@ def collate_text_val(data):
             if token.dim() == 1:
                 token = token.unsqueeze(-1)
                 print(f"Token reshaped to 2D: {token.shape}")
-            words_target[i, :end, :] = token[:end, :]
+            words_target[i, :end] = token[:end]
             words_mask[i, :end] = 1.0
         
         print("Final words_target shape:", words_target.shape)
