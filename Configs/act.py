@@ -25,7 +25,7 @@ cfg['sft_factor'] = 0.6
 cfg['num_workers'] = 2#32
 cfg['no_core_driver'] = False
 cfg['no_pin_memory'] = False
-cfg['batchsize'] = 64*5  #64 ---------------------
+cfg['batchsize'] = 64  #64 ---------------------
 
 
 # opt
@@ -36,7 +36,7 @@ cfg['margin'] = 0.2
 
 cfg['debug_mode'] = False
 # train
-cfg['n_epoch'] = 1#100
+cfg['n_epoch'] = 100
 cfg['max_es_cnt'] = 10  #10
 cfg['hard_negative_start_epoch'] = 20
 cfg['hard_pool_size'] = 20

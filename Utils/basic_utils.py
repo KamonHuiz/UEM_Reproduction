@@ -25,7 +25,7 @@ class BigFile:
         assert (len(self.names) == self.nr_of_images)
         self.name2index = dict(zip(self.names, range(self.nr_of_images)))
         self.binary_file = os.path.join(datadir, "feature.bin")
-        print("[%s] %dx%d instances loaded from %s" % (self.__class__.__name__, self.nr_of_images, self.ndims, datadir))
+        #print("[%s] %dx%d instances loaded from %s" % (self.__class__.__name__, self.nr_of_images, self.ndims, datadir))
 
     def read(self, requested, isname=True):
         requested = set(requested)

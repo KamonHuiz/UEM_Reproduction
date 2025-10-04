@@ -38,7 +38,7 @@ cfg['margin'] = 0.1
 
 
 # train
-cfg['n_epoch'] = 100
+cfg['n_epoch'] = 1
 cfg['max_es_cnt'] = 10
 cfg['hard_negative_start_epoch'] = 20
 cfg['hard_pool_size'] = 20
