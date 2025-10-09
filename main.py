@@ -160,15 +160,16 @@ def main():
 
     if len(device_ids) > 1:
         model = nn.DataParallel(model)
-    
+    #Hàm Loss
     criterion = get_losses(cfg)
+    #Validation
     val_criterion = get_validations(cfg)
 
     if args.eval:
         if args.resume == '':
             logger.info('No trained ckpt load !!!') 
         else:
-            with torch.no_grad():
+            with torch.no_grad():   
                 validation(test_context_dataloader, test_query_eval_loader, model, val_criterion, cfg, logger, args.resume)
         exit(0)
 

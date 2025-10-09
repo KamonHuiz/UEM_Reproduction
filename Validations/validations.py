@@ -19,21 +19,55 @@ from Utils.utils import gpu
 import json
 
 
-def get_gt(video_metas, query_metas):
+#PRINT DEBUGGING
+
+def get_gt(video_metas, query_metas, debug=True):
     v2t_gt = []
+
+    if debug:
+        print("\n=== DEBUG: Checking Video ↔ Query mapping ===")
+        print(f"Total videos: {len(video_metas)}, total queries: {len(query_metas)}\n")
+
     for vid_id in video_metas:
         v2t_gt.append([])
+
+        # DEBUG: track matches for this video
+        if debug:
+            print(f"[Video] {vid_id}")
+
         for i, query_id in enumerate(query_metas):
-            if query_id.split('#', 1)[0] == vid_id:
+            query_base = query_id.split('#', 1)[0]
+
+            if query_base == vid_id:
                 v2t_gt[-1].append(i)
 
+                if debug:
+                    print(f"   ↳ Matched Query idx={i}, id={query_id}")
+
+        # Nếu không match query nào, in cảnh báo
+        if debug and len(v2t_gt[-1]) == 0:
+            print(f"   ⚠️ No matching queries found for video '{vid_id}'")
+
+    # Build t2v_gt
     t2v_gt = {}
     for i, t_gts in enumerate(v2t_gt):
         for t_gt in t_gts:
             t2v_gt.setdefault(t_gt, [])
             t2v_gt[t_gt].append(i)
 
+    if debug:
+        print("\n=== Reverse mapping (Query → Video) ===")
+        for t_id, v_list in t2v_gt.items():
+            print(f"[Query idx={t_id}, id={query_metas[t_id]}] -> Videos: {[video_metas[v] for v in v_list]}")
+
+        print("\n=== Summary ===")
+        num_no_match = sum(1 for g in v2t_gt if len(g) == 0)
+        print(f"Videos with no query match: {num_no_match}/{len(video_metas)}")
+        num_orphan_queries = len(set(range(len(query_metas))) - set(t2v_gt.keys()))
+        print(f"Queries with no video match: {num_orphan_queries}/{len(query_metas)}\n")
+
     return v2t_gt, t2v_gt
+
 
 
 def eval_q2m(scores, q2m_gts):
@@ -70,6 +104,17 @@ def cal_perf(t2v_all_errors, t2v_gt):
 
 
 class validations(nn.Module):
+    '''
+    This is to describe this class
+    model.eval() -Turn off drop out, utilze all trained layers
+    context_info : used to load the video embeddings
+    score_sum_word, query_metas: calculate the similarity between query and context
+    video_metas == list_id of videos?
+
+    Maybe the step of erase cái enc# làm mất cái #????
+
+    query là query theo scene chính vì thế nó có cái enc
+    '''
     def __init__(self, cfg):
         super(validations, self).__init__()
 
@@ -84,7 +129,7 @@ class validations(nn.Module):
                                                                   query_eval_loader,
                                                                   context_info)
         video_metas = context_info['video_metas']
-
+        #Somehow groundtruth may struggle
         v2t_gt, t2v_gt = get_gt(video_metas, query_metas)
 
 
